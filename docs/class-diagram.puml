@@ -1,0 +1,91 @@
+@startuml
+skinparam classAttributeIconSize 0
+hide empty members
+
+package "kz.aitu.designpatterns.strategy" {
+  class Main <<Client>> {
+    +main(args: String[]): void
+    -selectLocation(scanner: Scanner, locations: List<Coordinate>, prompt: String): Coordinate
+    -selectStrategy(scanner: Scanner): RouteStrategy
+    -readInteger(scanner: Scanner, prompt: String, minimum: int, maximum: int): int
+    -askToPlanAnother(scanner: Scanner): boolean
+  }
+}
+
+package "kz.aitu.designpatterns.strategy.context" {
+  class Navigator <<Context>> {
+    -strategy: RouteStrategy
+    +Navigator(initialStrategy: RouteStrategy)
+    +setStrategy(newStrategy: RouteStrategy): void
+    +planRoute(origin: Coordinate, destination: Coordinate): Route
+    +getActiveStrategy(): RouteStrategy
+  }
+}
+
+package "kz.aitu.designpatterns.strategy.strategy" {
+  interface RouteStrategy <<Strategy>> {
+    +buildRoute(start: Coordinate, destination: Coordinate): Route
+    +getTransportType(): TransportType
+  }
+
+  class CarRouteStrategy
+  class WalkingRouteStrategy
+  class CyclingRouteStrategy
+  class TransitRouteStrategy
+}
+
+package "kz.aitu.designpatterns.strategy.model" {
+  class Coordinate {
+    -name: String
+    -latitude: double
+    -longitude: double
+    +Coordinate(name: String, latitude: double, longitude: double)
+    +distanceTo(other: Coordinate): double
+    +getName(): String
+    +getLatitude(): double
+    +getLongitude(): double
+  }
+
+  class Route <<record>> {
+    +start: Coordinate
+    +destination: Coordinate
+    +transportType: TransportType
+    +totalDistanceKm: double
+    +estimatedDurationMinutes: double
+    +estimatedCostKzt: double
+    +estimatedCaloriesKcal: double
+    +carbonEmissionGrams: double
+    +steps: List<RouteStep>
+    +printSummary(): void
+  }
+
+  class RouteStep <<record>> {
+    +stepNumber: int
+    +instruction: String
+    +distanceKm: double
+    +estimatedMinutes: double
+    +surfaceOrRoadType: String
+  }
+
+  enum TransportType {
+    CAR
+    WALKING
+    CYCLING
+    PUBLIC_TRANSIT
+  }
+}
+
+Main ..> Coordinate : offers locations
+Main ..> RouteStrategy : selects
+Main ..> Navigator : creates and configures
+Navigator --> "1" RouteStrategy : delegates to
+RouteStrategy <|.. CarRouteStrategy
+RouteStrategy <|.. WalkingRouteStrategy
+RouteStrategy <|.. CyclingRouteStrategy
+RouteStrategy <|.. TransitRouteStrategy
+RouteStrategy ..> Route : returns
+Route "1" --> "2" Coordinate : start / destination
+Route "1" *-- "0..*" RouteStep : steps
+Route --> TransportType
+Coordinate ..> Coordinate : distanceTo
+@enduml
